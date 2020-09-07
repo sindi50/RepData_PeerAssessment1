@@ -7,19 +7,108 @@ output:
 
 
 ## Loading and preprocessing the data
+library(knitr)
 
+````{chunk1, echo = TRUE}
 
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip",
+              destfile = tempfile())
+
+unzip("activity.zip")
+
+activitycsv <- read.csv("activity.csv")
+##pode ter q mudar
+
+library(lubridate)
+
+activitycsv$date <- ymd(activitycsv$date)
+
+library(dplyr)
 
 ## What is mean total number of steps taken per day?
 
+steps_per_day <- activitycsv %>%
+  filter(!is.na(steps)) %>%
+  group_by(date) %>%
+  summarise(steps = sum(steps))
 
+steps_per_day_mean <- mean(steps_per_day$steps, na.rm = TRUE)
+  
+steps_per_day_median <- median(steps_per_day$steps, na.rm = TRUE)
+
+##    Histogram of the total number of steps taken each day
+
+library(ggplot2)
+
+h <- ggplot(steps_per_day, aes(x = steps)) 
+
+h <- h + geom_histogram(fill = "blue", colour = "red", binwidth = 2000) +
+  labs(x = "Steps Per Day", y = "Freq.", "Total Number of Steps Each Day") 
+
+h
 
 ## What is the average daily activity pattern?
 
+interval_data <- activitycsv %>%
+  filter(!is.na(steps)) %>%
+  group_by(interval) %>%
+  summarise(steps = mean(steps))
 
+##    Time series plot of the average number of steps taken
+
+qline <- qplot(x = interval, y = steps, data = interval_data, geom = "line") 
+
+qline
+
+##    The 5-minute interval that, on average, contains the maximum number of steps
+
+max_steps_interval <- interval_data[which.max(interval_data$steps),]
+
+max_steps_interval
 
 ## Imputing missing values
 
+##    Code to describe and show a strategy for imputing missing data
 
+input_data = activitycsv
+
+summary(input_data)
+
+input_data$steps[which(is.na(input_data$steps))] = mean(input_data$steps,na.rm = TRUE)
+
+ input_steps_per_day <- input_data %>%
+      filter(!is.na(steps)) %>%
+      group_by(date) %>%
+      summarise(steps = sum(steps))
+
+##    Histogram of the total number of steps taken each day after missing values are ##    imputed
+
+inp_h <- ggplot(input_steps_per_day, aes(x = steps)) 
+
+inp_h <- inp_h + geom_histogram(fill = "yellow", colour = "red", binwidth = 2000) +
+  labs(x = "Steps Per Day", y = "Freq.", "Total Number of Steps Each Day") 
+
+inp_h
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+input_interval_data <- input_data %>%
+  filter(!is.na(steps)) %>%
+  group_by(interval) %>%
+  summarise(steps = mean(steps))
+
+
+inp_line <- ggplot() + geom_line(data=interval_data, aes(x=interval, y=steps)) + 
+     geom_line(data=input_interval_data, aes(x=interval,y=steps), color="red") 
+
+inp_line
+
+##    Panel plot comparing the average number of steps taken per 5-minute interval  ##    across weekdays and weekends
+
+input_data$day <- as.factor(weekdays(input_data$date, abbreviate = FALSE))
+
+input_data$Type <- ifelse(input_data$day == "sábado" | input_data$day == "domingo", "Weekend", "Weekday")
+
+inp_wxw <- ggplot(data=input_data, aes(x = interval, y = steps, color = Type)) + 
+  geom_line() +
+  ggtitle("Activity paterns: Weekdays vs weekends")
