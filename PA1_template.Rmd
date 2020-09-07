@@ -113,3 +113,4 @@ inp_wxw <- ggplot(data=input_data, aes(x = interval, y = steps, color = Type)) +
   geom_line() +
   ggtitle("Activity paterns: Weekdays vs weekends")
 
+
