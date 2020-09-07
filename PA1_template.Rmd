@@ -112,3 +112,4 @@ input_data$Type <- ifelse(input_data$day == "sábado" | input_data$day == "domin
 inp_wxw <- ggplot(data=input_data, aes(x = interval, y = steps, color = Type)) + 
   geom_line() +
   ggtitle("Activity paterns: Weekdays vs weekends")
+
